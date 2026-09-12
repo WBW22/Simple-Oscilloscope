@@ -104,6 +104,28 @@ Program Size: Code=20742  RO-data=8738  RW-data=36  ZI-data=3876
 
 芯片选择 **STM32F103C8**,预定义宏 `USE_HAL_DRIVER, STM32F103xB`。
 
+### 在 VS Code 里编译与烧录
+
+仓库里带了 [.vscode/tasks.json](.vscode/tasks.json),把 Keil 命令行编译和 ST-Link 烧录都包成了
+VS Code 任务,**不用打开 Keil 就能干活**。按 `Ctrl+Shift+B` 跑默认任务(烧录),
+或 `Ctrl+Shift+P` → `Tasks: Run Task` 挑其他的:
+
+| 任务 | 作用 |
+|------|------|
+| 烧录 HEX → ST-Link | 把编译好的 `.hex` 烧进芯片(**默认任务**) |
+| Keil 编译 | 调 `UV4.exe -b` 批处理编译,日志写到 `MDK-ARM/build.log` |
+| 编译并烧录 (Keil → ST-Link) | 上面两步串联,一条命令走完 |
+| 查看编译日志 | `UV4 -b` 只写文件、不输出到终端,用这个看结果 |
+| 芯片全片擦除 | 把芯片整片擦掉 |
+
+依赖两个外部程序,路径在 `tasks.json` 里是**写死的绝对路径,换机器要改**:
+
+- **STM32CubeProgrammer CLI** —— 随 ST 官方 VS Code 扩展一起装,本工程用的版本是 `2.23.0`
+- **Keil UV4** —— 本工程用的路径是 `F:\keil\UV4\UV4.exe`
+
+> VS Code 只读**工作区根目录**下的 `.vscode/`。如果打开的是上层目录,
+> 需要在上层也放一份内容相同的 `tasks.json` 才会被加载。
+
 ## 系统时钟
 
 `main.c` 中的 `SystemClock_Config()` 把时钟配置为

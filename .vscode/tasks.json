@@ -1,0 +1,87 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "烧录 HEX → ST-Link",
+            "type": "shell",
+            "command": "C:\\Users\\20648\\AppData\\Local\\stm32cube\\bundles\\programmer\\2.23.0\\bin\\STM32_Programmer_CLI.exe",
+            "args": [
+                "-c", "port=SWD",
+                "-w", "E:\\oscilloscope1\\Simple-Oscilloscope\\MDK-ARM\\Simple-Oscilloscope\\Simple-Oscilloscope.hex",
+                "-v",
+                "-rst"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "Keil 编译",
+            "type": "shell",
+            "command": "F:\\keil\\UV4\\UV4.exe",
+            "args": [
+                "-b", "E:\\oscilloscope1\\Simple-Oscilloscope\\MDK-ARM\\Simple-Oscilloscope.uvprojx",
+                "-j0",
+                "-o", "E:\\oscilloscope1\\Simple-Oscilloscope\\MDK-ARM\\build.log"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope\\MDK-ARM"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "编译并烧录 (Keil → ST-Link)",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Keil 编译",
+                "烧录 HEX → ST-Link"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "查看编译日志",
+            "type": "shell",
+            "command": "cat",
+            "args": [
+                "E:\\oscilloscope1\\Simple-Oscilloscope\\MDK-ARM\\build.log"
+            ],
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "芯片全片擦除",
+            "type": "shell",
+            "command": "C:\\Users\\20648\\AppData\\Local\\stm32cube\\bundles\\programmer\\2.23.0\\bin\\STM32_Programmer_CLI.exe",
+            "args": [
+                "-c", "port=SWD",
+                "-e", "all"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        }
+    ]
+}

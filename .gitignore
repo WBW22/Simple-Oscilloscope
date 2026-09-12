@@ -19,7 +19,10 @@ MDK-ARM/RTE/
 *_bak/
 
 # ---- 编辑器 / 系统 ----
-.vscode/
+# .vscode 整个忽略,但保留 tasks.json(编译/烧录任务,有意入库)
+# 注意:不能写成 .vscode/,那样会排除整个目录,后面的 ! 规则无法生效
+.vscode/*
+!.vscode/tasks.json
 .idea/
 Thumbs.db
 desktop.ini
