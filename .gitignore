@@ -1,0 +1,27 @@
+# ---- Keil MDK-ARM 构建输出 ----
+# UV4 把 .o/.axf/.hex/.map 等全部放在与工程同名的子目录里
+MDK-ARM/Simple-Oscilloscope/
+MDK-ARM/build.log
+MDK-ARM/*.build_log.htm
+MDK-ARM/*.htm
+MDK-ARM/JLinkLog.txt
+MDK-ARM/RTE/
+
+# 工程备份文件(Keil 每次保存生成)
+*.uvguix.*
+*.bak
+*.dep
+*.scvd
+
+# ---- CubeMX ----
+# 重新生成代码时的备份目录
+.mxproject
+*_bak/
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*.swp
+*~
