@@ -66,7 +66,8 @@
 │   ├── main.c                   主逻辑:HAL 初始化、时钟、采集与绘图主循环
 │   ├── main.h                   struct Oscilloscope 数据结构定义
 │   ├── stm32f1xx_it.c/.h        中断服务函数
-│   └── stm32f1xx_hal_conf.h     HAL 库裁剪配置(见下方说明)
+│   ├── stm32f1xx_hal_conf.h     HAL 库裁剪配置(见下方说明)
+│   └── sysmem.c / syscalls.c    newlib 底层桩函数(只有 GCC 构建需要)
 ├── Drivers/                     ST 官方库(已裁剪)
 │   ├── CMSIS/                   Cortex-M3 内核头文件 + F103 器件头文件
 │   └── STM32F1xx_HAL_Driver/    STM32F1xx HAL 驱动
@@ -79,14 +80,37 @@
 │   ├── TFT/                     ST7735S 屏驱动 + 字库
 │   └── TIMER/                   TIM2 PWM 输出
 ├── SYSTEM/delay/                DWT 实现的 us/ms 延时
-└── MDK-ARM/                     Keil 工程
+│
+├── MDK-ARM/                     ── Keil 构建系统(ARMCC) ──
+│   └── startup_stm32f103xb.s        ARMASM 语法的启动文件
+│
+└── (以下为 GCC 构建系统,与 Keil 共用同一套源码)
+    ├── CMakeLists.txt           顶层构建脚本
+    ├── CMakePresets.json        Debug / Release 预设
+    ├── cmake/
+    │   ├── gcc-arm-none-eabi.cmake     工具链定义(含 `_printf_float` 修复)
+    │   └── stm32cubemx/CMakeLists.txt  源文件与头文件路径清单
+    ├── startup_stm32f103xb.s        GNU 语法的启动文件(与上面的那份不同!)
+    ├── STM32F103xx_FLASH.ld         链接脚本
+    └── build/                       构建输出(已 gitignore)
 ```
 
 ## 编译
 
-用 **Keil MDK-ARM V5**(ARMCC V5.06)打开 [MDK-ARM/Simple-Oscilloscope.uvprojx](MDK-ARM/Simple-Oscilloscope.uvprojx)
-直接编译即可,无需额外配置。
+本工程提供**两套并行的构建系统**,源码完全共用、互不影响,任选其一即可。
+芯片都是 **STM32F103C8**,预定义宏都是 `USE_HAL_DRIVER, STM32F103xB`。
 
+|  | 方式一:Keil MDK-ARM | 方式二:CMake + Ninja + GCC |
+|---|---|---|
+| 工具链 | ARMCC V5.06 | arm-none-eabi-gcc |
+| 工程入口 | [MDK-ARM/Simple-Oscilloscope.uvprojx](MDK-ARM/Simple-Oscilloscope.uvprojx) | [CMakeLists.txt](CMakeLists.txt) |
+| 启动文件 | `MDK-ARM/startup_stm32f103xb.s`(**ARMASM** 语法) | `startup_stm32f103xb.s`(**GNU** 语法) |
+| Flash 占用 | 28.8 KB | 38.7 KB(Release) |
+| 需要装什么 | Keil MDK-ARM V5 | `cmake` / `ninja` / `arm-none-eabi-gcc` 进 PATH |
+
+### 方式一:Keil MDK-ARM(ARMCC)
+
+用 **Keil MDK-ARM V5**(ARMCC V5.06)打开工程直接编译即可,无需额外配置。
 命令行编译:
 
 ```bash
@@ -100,28 +124,73 @@ Program Size: Code=20742  RO-data=8738  RW-data=36  ZI-data=3876
 0 Error(s), 0 Warning(s)
 ```
 
-即 **Flash ≈ 28.8 KB / 64 KB**,**RAM ≈ 3.8 KB / 20 KB**,资源余量充足。
+即 **Flash ≈ 28.8 KB / 64 KB**,**RAM ≈ 3.8 KB / 20 KB**。
 
-芯片选择 **STM32F103C8**,预定义宏 `USE_HAL_DRIVER, STM32F103xB`。
+### 方式二:CMake + Ninja + GCC
+
+不依赖 Keil 授权,可在 VS Code 里全程编译 + 烧录 + 调试。
+
+```bash
+cmake --preset Debug          # 首次配置
+cmake --build --preset Debug
+cmake --preset Release        # Release 要单独配置一次
+cmake --build --preset Release
+```
+
+产物在 `build/<预设名>/Simple-Oscilloscope.{elf,hex}`,链接后会自动打印体积并生成 `.hex`。
+
+编译结果(Debug 用 `-O0`,Release 用 `-Os`):
+
+```
+              RAM        FLASH
+Debug        4632 B     48040 B    (22.6% / 73.3%)
+Release      4640 B     38724 B    (22.7% / 59.1%)
+```
+
+比 Keil 大出约 10 KB,主要是 newlib 与浮点格式化代码的体积,
+**64 KB 仍余 25 KB**,够用。
+
+> ### ⚠️ `_printf_float` 这一行不能删
+>
+> `--specs=nano.specs` 默认**不含浮点格式化代码**,而
+> [Hardware/TFT/tft.c](Hardware/TFT/tft.c) 的 `TFT_ShowUI()` 用的是
+> `sprintf(showData, "%1.2fV ", vpp)`。
+>
+> 少了它,烧进去**屏幕能亮、波形正常,但峰峰值那一栏永远是空白**,
+> 而且**编译链接一条警告都不报**——是最难查的那种故障。
+>
+> 修复是 [cmake/gcc-arm-none-eabi.cmake](cmake/gcc-arm-none-eabi.cmake) 里的
+> 链接选项 `-u _printf_float`。**改那个文件时别把这一行删了。**
 
 ### 在 VS Code 里编译与烧录
 
-仓库里带了 [.vscode/tasks.json](.vscode/tasks.json),把 Keil 命令行编译和 ST-Link 烧录都包成了
-VS Code 任务,**不用打开 Keil 就能干活**。按 `Ctrl+Shift+B` 跑默认任务(烧录),
-或 `Ctrl+Shift+P` → `Tasks: Run Task` 挑其他的:
+仓库里带了 [.vscode/tasks.json](.vscode/tasks.json) 和 [.vscode/launch.json](.vscode/launch.json),
+把上面两套流程都包成了 VS Code 任务,**不用打开 Keil 就能干活**。
+按 `Ctrl+Shift+B` 跑默认任务,或 `Ctrl+Shift+P` → `Tasks: Run Task` 挑:
 
 | 任务 | 作用 |
 |------|------|
-| 烧录 HEX → ST-Link | 把编译好的 `.hex` 烧进芯片(**默认任务**) |
-| Keil 编译 | 调 `UV4.exe -b` 批处理编译,日志写到 `MDK-ARM/build.log` |
-| 编译并烧录 (Keil → ST-Link) | 上面两步串联,一条命令走完 |
-| 查看编译日志 | `UV4 -b` 只写文件、不输出到终端,用这个看结果 |
+| 构建并烧录 (CMake Release) | 编译 + 烧录,一条命令走完 |
+| 构建并烧录 (CMake Debug) | 同上,Debug 版 |
+| **构建 (CMake Release)** | **默认任务**,`Ctrl+Shift+B` 直接跑 |
+| 构建 (CMake Debug) | 编译 Debug 版 |
+| 配置 CMake | 首次,或改过 `CMakeLists.txt` 之后 |
+| 烧录: CMake Release / Debug HEX | 只烧录不编译 |
+| 烧录: Keil HEX | 烧 Keil 编出来的那个 hex |
+| Keil 编译 | 调 `UV4.exe -b`,日志写到 `MDK-ARM/build.log` |
+| 查看 Keil 编译日志 | `UV4 -b` 只写文件不输出到终端,用这个看结果 |
 | 芯片全片擦除 | 把芯片整片擦掉 |
+| 清理 CMake 构建目录 | clean |
 
-依赖两个外部程序,路径在 `tasks.json` 里是**写死的绝对路径,换机器要改**:
+按 `F5` 可启动 ST-Link 调试(需要 ST 官方扩展
+`stmicroelectronics.stm32-vscode-extension`),配置见 [.vscode/launch.json](.vscode/launch.json)。
+**调试要用 Debug 版固件**——Release 的 elf 没有调试符号。
+
+依赖的外部程序,路径在 `tasks.json` 里是**写死的绝对路径,换机器要改**:
 
 - **STM32CubeProgrammer CLI** —— 随 ST 官方 VS Code 扩展一起装,本工程用的版本是 `2.23.0`
 - **Keil UV4** —— 本工程用的路径是 `F:\keil\UV4\UV4.exe`
+- **cmake / ninja / arm-none-eabi-gcc** —— 走 `PATH`,不用写路径
 
 > VS Code 只读**工作区根目录**下的 `.vscode/`。如果打开的是上层目录,
 > 需要在上层也放一份内容相同的 `tasks.json` 才会被加载。

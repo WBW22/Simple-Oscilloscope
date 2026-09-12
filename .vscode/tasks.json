@@ -2,7 +2,124 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "烧录 HEX → ST-Link",
+            "label": "构建并烧录 (CMake Release)",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "构建 (CMake Release)",
+                "烧录: CMake Release HEX"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "构建并烧录 (CMake Debug)",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "构建 (CMake Debug)",
+                "烧录: CMake Debug HEX"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "构建 (CMake Release)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "--preset", "Release"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "构建 (CMake Debug)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "--preset", "Debug"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "配置 CMake (首次 / 改过 CMakeLists 后)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--preset", "Debug"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "烧录: CMake Release HEX",
+            "type": "shell",
+            "command": "C:\\Users\\20648\\AppData\\Local\\stm32cube\\bundles\\programmer\\2.23.0\\bin\\STM32_Programmer_CLI.exe",
+            "args": [
+                "-c", "port=SWD",
+                "-w", "E:\\oscilloscope1\\Simple-Oscilloscope\\build\\Release\\Simple-Oscilloscope.hex",
+                "-v",
+                "-rst"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "烧录: CMake Debug HEX",
+            "type": "shell",
+            "command": "C:\\Users\\20648\\AppData\\Local\\stm32cube\\bundles\\programmer\\2.23.0\\bin\\STM32_Programmer_CLI.exe",
+            "args": [
+                "-c", "port=SWD",
+                "-w", "E:\\oscilloscope1\\Simple-Oscilloscope\\build\\Debug\\Simple-Oscilloscope.hex",
+                "-v",
+                "-rst"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "烧录: Keil HEX",
             "type": "shell",
             "command": "C:\\Users\\20648\\AppData\\Local\\stm32cube\\bundles\\programmer\\2.23.0\\bin\\STM32_Programmer_CLI.exe",
             "args": [
@@ -15,10 +132,6 @@
                 "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
             },
             "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
@@ -45,16 +158,7 @@
             }
         },
         {
-            "label": "编译并烧录 (Keil → ST-Link)",
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "Keil 编译",
-                "烧录 HEX → ST-Link"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "查看编译日志",
+            "label": "查看 Keil 编译日志",
             "type": "shell",
             "command": "cat",
             "args": [
@@ -73,6 +177,22 @@
             "args": [
                 "-c", "port=SWD",
                 "-e", "all"
+            ],
+            "options": {
+                "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "清理 CMake 构建目录",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "--preset", "Release", "--target", "clean"
             ],
             "options": {
                 "cwd": "E:\\oscilloscope1\\Simple-Oscilloscope"

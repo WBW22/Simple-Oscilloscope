@@ -1,0 +1,35 @@
+{
+    // 需要安装 ST 官方扩展: stmicroelectronics.stm32-vscode-extension
+    // 两个配置二选一,优先用第一个(自动从 CMake 工程解析固件路径)。
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "stlinkgdbtarget",
+            "request": "launch",
+            "name": "调试: ST-Link (自动解析固件路径)",
+            "origin": "snippet",
+            "cwd": "${workspaceFolder}",
+            "preBuild": "${command:st-stm32-ide-debug-launch.build}",
+            "runEntry": "main",
+            "imagesAndSymbols": [
+                {
+                    "imageFileName": "${command:st-stm32-ide-debug-launch.get-projects-binary-from-context1}"
+                }
+            ]
+        },
+        {
+            // 兜底: 写死路径。上面那个解析失败时用这个。
+            // 注意 Debug 的 elf 有调试符号,调试要用它,别用 Release 的。
+            "type": "stlinkgdbtarget",
+            "request": "launch",
+            "name": "调试: ST-Link (CMake Debug, 写死路径)",
+            "cwd": "${workspaceFolder}",
+            "runEntry": "main",
+            "imagesAndSymbols": [
+                {
+                    "imageFileName": "E:\\oscilloscope1\\Simple-Oscilloscope\\build\\Debug\\Simple-Oscilloscope.elf"
+                }
+            ]
+        }
+    ]
+}

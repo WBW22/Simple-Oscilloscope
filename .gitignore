@@ -13,16 +13,22 @@ MDK-ARM/RTE/
 *.dep
 *.scvd
 
+# ---- CMake / Ninja 构建输出 ----
+# CMakePresets 里 binaryDir = ${sourceDir}/build/${presetName}
+build/
+
 # ---- CubeMX ----
 # 重新生成代码时的备份目录
 .mxproject
 *_bak/
 
 # ---- 编辑器 / 系统 ----
-# .vscode 整个忽略,但保留 tasks.json(编译/烧录任务,有意入库)
+# .vscode 整个忽略,但保留 tasks.json / launch.json(编译烧录任务与调试配置,有意入库)
+# settings.json 含机器相关的绝对路径(cmake.sourceDirectory),不入库
 # 注意:不能写成 .vscode/,那样会排除整个目录,后面的 ! 规则无法生效
 .vscode/*
 !.vscode/tasks.json
+!.vscode/launch.json
 .idea/
 Thumbs.db
 desktop.ini
